@@ -22,7 +22,7 @@ Add log:pass to login.txt, add links to post_id.txt (in proccesing)
 
 ![This is an image](https://arthive.net/res/media/img/orig/work/6e8/339768.png)
 
-#Need to DO
+# Need to DO
 
 - [ ] Login account from vk_token with selenium.
 - [ ] Write exceptions
