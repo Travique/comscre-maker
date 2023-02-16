@@ -21,3 +21,14 @@ Be sure, that u r using VPN.
 Add log:pass to login.txt, add links to post_id.txt (in proccesing)
 
 ![This is an image](https://arthive.net/res/media/img/orig/work/6e8/339768.png)
+
+#Need to DO
+
+[ ] Login account from vk_token with selenium.
+[ ] Write exceptions
+[ ] Add photos and videos to comment. 
+[ ] Fix bugs (find bugs) 
+[x] Write alpha
+[ ] Do threads for code.
+[ ] Do Cycle for spamming
+[ ] Write deleting used accounts and write exceptions for this shit. 
