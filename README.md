@@ -32,3 +32,4 @@ Add log:pass to login.txt, add links to post_id.txt (in proccesing)
 - [ ] Do threads for code.
 - [ ] Do Cycle for spamming
 - [ ] Write deleting used accounts and write exceptions for this shit. 
+- [ ] Captcha! Warnings 
