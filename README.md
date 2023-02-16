@@ -9,10 +9,12 @@ https://support.google.com/chrome/a/answer/10025748?hl=uk
 Check this before starting bot.
 
 ## Second Moment!
-Be sure, that u write <sub>pip install -r requirements.txt</sub>
+Be sure, that u write ***pip install -r requirements.txt***
 
-### Third Moment! 
+## Third Moment! 
 Be sure, that u r using VPN. 
 
-### Last Moment
+## Last Moment
+
+Add log:pass to login.txt, add links to post_id.txt (in proccesing)
 
