@@ -27,9 +27,9 @@ Add log:pass to login.txt, add links to post_id.txt (in proccesing)
 - [ ] Login account from vk_token with selenium. | Impossible
 - [x] Write exceptions
 - [ ] Add photos and videos to comment. 
-- [ ] Fix bugs (find bugs) 
+- [x] Fix bugs (find bugs) 
 - [x] Write alpha
 - [ ] Do threads for code.
-- [ ] Do Cycle for spamming
+- [x] Do Cycle for spamming
 - [x] Write deleting used accounts and write exceptions for this shit. 
 - [ ] Captcha! Warnings 
