@@ -38,10 +38,8 @@ async def take_screenshot(post_id, owner_id):
 
 
 async def post_comment(comment, post_id, owner_id):
+    
     try:
-
-        #I think, that we will add here cycles.
-        
         print(f'https://vk.com/wall-{owner_id}_{post_id} is waiting for comment.')
         vk.wall.createComment(owner_id=-owner_id, post_id=post_id, message=comment) 
         print(f'Comment "{comment}" posted successfully for https://vk.com/wall-{owner_id}_{post_id}.')
@@ -68,16 +66,26 @@ async def main():
     except Exception as e:
         print(f'Error reading post information: {str(e)}')
         return
+
+#_________________________________________________________________________________
+
+    match_info_list = []
+    post_info_list = post_info.split('\n')
+    
+    while len(post_info_list) != 0:
         
-
-    match = re.search(r'vk\.com/wall-(\d+)_(\d+)', post_info) 
-    if match:
-        owner_id = int(match.group(1))
-        post_id = int(match.group(2))
-    else:
-        print('Invalid post info!')
-        return
-
+        match = re.search(r'vk\.com/wall-(\d+)_(\d+)', post_info_list[0])
+        
+        if match:
+            owner_id = int(match.group(1))
+            post_id = int(match.group(2))
+            match_info_list = match_info_list + [(owner_id, post_id)]
+            post_info_list.pop(0)
+            
+        else:
+            print('Invalid post info!')
+#_________________________________________________________________________________
+    
     try:
         global vk_session
         vk_session = vk_api.VkApi(login, password, app_id=API_ID, client_secret=API_SECRET)
@@ -94,8 +102,10 @@ async def main():
     tasks = []
     tasks.append(asyncio.create_task(take_screenshot(post_id, owner_id)))
     for comment in comments:
-        tasks.append(asyncio.create_task(post_comment(comment, post_id, owner_id)))
-        
+        while len(match_info_list) != 0:
+            tasks.append(asyncio.create_task(post_comment(comment, match_info_list[0][1], match_info_list[0][0])))
+            match_info_list.pop(0)
+            
     try:
         await asyncio.gather(*tasks)
         
