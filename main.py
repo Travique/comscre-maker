@@ -72,6 +72,16 @@ async def main():
         print(f'Error reading post information: {str(e)}')
         return
 
+    try:
+        with open('comments.txt', 'r') as f:
+            comments = f.read().strip()
+            
+    except Exception as e:
+        print(f'Error reading post information: {str(e)}')
+        return
+
+    comments_list = comments.split('\n')
+    comment = comments_list[random.randrange(0, len(comments_list))]
     match_info_list = []
     post_info_list = post_info.split('\n')
     
@@ -99,9 +109,6 @@ async def main():
     except Exception as e:
         print(f'Error setting up VK API (maybe u should use VPN): {str(e)}')
         return
-
-    comments = ['Uno', 'duos', 'tres']
-    comment = comments[random.randrange(0, len(comments))]
 
     tasks = []
     tasks.append(asyncio.create_task(take_screenshot(post_info_list)))
