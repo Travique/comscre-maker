@@ -34,8 +34,7 @@ async def take_screenshot(post_info_list):
             print(f'Screenshot saved to {screenshot_path}!')
 
         browser.quit()
-       
-            
+         
     except Exception as e:
         print(f'Error taking screenshot: {str(e)}')
         browser.quit()
@@ -51,14 +50,19 @@ async def post_comment(comment, post_id, owner_id):
         
     except Exception as e:
         print(f'Error posting comment "{comment}": {str(e)}')
-
+        return
+        
 
 async def main():
     start = time.time()
 
+    log_pass = []
+    
     try:
-        with open('login.txt', 'r') as f:
-            login, password = f.read().strip().split(':')
+        with open('login.txt') as f:
+            for line in f:
+                login, password = line.strip().split(':')
+                log_pass.append((login, password))
             
     except Exception as e:
         print(f'Error reading login information: {str(e)}')
@@ -81,7 +85,6 @@ async def main():
         return
 
     comments_list = comments.split('\n')
-    comment = comments_list[random.randrange(0, len(comments_list))]
     match_info_list = []
     post_info_list = post_info.split('\n')
     
@@ -98,33 +101,52 @@ async def main():
             
         else:
             print('Invalid post info!')
-            
-    try:
-        global vk_session
-        vk_session = vk_api.VkApi(login, password, app_id=API_ID, client_secret=API_SECRET)
-        vk_session.auth()
-        global vk
-        vk = vk_session.get_api()
+             
+    for index, element in enumerate(log_pass):
+        if index == len(log_pass) + 1:
+            continue
         
-    except Exception as e:
-        print(f'Error setting up VK API (maybe u should use VPN): {str(e)}')
-        return
+        try:
+            global vk_session
+            vk_session = vk_api.VkApi(log_pass[index][0], log_pass[index][1], app_id=API_ID, client_secret=API_SECRET)
+            vk_session.auth()
+            global vk
+            vk = vk_session.get_api()
 
-    tasks = []
-    tasks.append(asyncio.create_task(take_screenshot(post_info_list)))
-    while len(match_info_list) != 0:
-        tasks.append(asyncio.create_task(post_comment(comment, match_info_list[0][1], match_info_list[0][0])))
-        match_info_list.pop(0)
+            if len(comments_list) == 0:
+                print("Add new comments!")
+                break
+
+            else:
+                comment = comments_list[random.randrange(0, len(comments_list))]
+                comments_list.remove(comment)
+    
+        except Exception as e:
+            print(f'Error setting up VK API (maybe u should use VPN): {str(e)}')
+            continue
+
+        tasks = []
+        tasks.append(asyncio.create_task(take_screenshot(post_info_list)))
+        for index, element in enumerate(match_info_list):
+            if index == len(match_info_list) +1:
+                continue
             
-    try:
-        await asyncio.gather(*tasks)
+            tasks.append(asyncio.create_task(post_comment(comment, match_info_list[index][1], match_info_list[index][0])))
+            
+        results = await asyncio.gather(*tasks, return_exceptions=True)
         
-    except Exception as e:
-        print(f'Error running tasks: {str(e)}')
+        for result in results:
+            if isinstance(result, Exception):
+                for task in tasks:
+                    task.cancel()
 
+        
 
+                        
+                
     end = time.time() - start 
     print(f'Time of working: {end}')
+
 
 if __name__ == '__main__':
     asyncio.run(main())
