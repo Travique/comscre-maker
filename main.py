@@ -3,6 +3,8 @@ import re
 import aiohttp
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 import vk_api
 import time 
 import random
@@ -11,6 +13,47 @@ import os
 API_ID = "2685278"
 API_SECRET = "hHbJug59sKJie78wjrH8"
 TIME_SLEEP = 5.1
+
+async def login_vk(driver, login_list):
+    # використовуємо перший рядок як логін та пароль
+    login = login_list[0].strip().split(':')
+    username = login[0]
+    password = login[1]
+
+    # переходимо на сторінку входу в аккаунт VK
+    driver.get('https://vk.com/login')
+
+    # знаходимо поля введення логіну та паролю і вводимо дані для входу
+    username_field = driver.find_element(By.XPATH, "//input[@name='login']")
+    username_field.send_keys(username)
+    username_field.send_keys(Keys.RETURN)
+
+    await asyncio.sleep(15)
+
+    password_field = driver.find_element(By.XPATH, "//input[@name='password']")
+    password_field.send_keys(password)
+    password_field.send_keys(Keys.RETURN)
+
+    # чекаємо 15 секунд для завантаження сторінки після входу
+    await asyncio.sleep(15)
+
+    # якщо вхід не вдався, використовуємо наступний рядок як логін та пароль
+    if 'id100' not in driver.current_url:
+        print('Invalid login credentials, trying next...')
+        login = login_list[1].strip().split(':')
+        username = login[0]
+        password = login[1]
+        username_field = driver.find_element(By.XPATH, "//input[@name='login']")
+        username_field.send_keys(username)
+        username_field.send_keys(Keys.RETURN)
+
+        await asyncio.sleep(15)
+
+        password_field = driver.find_element(By.XPATH, "//input[@name='password']")
+        password_field.send_keys(password)
+        password_field.send_keys(Keys.RETURN)
+        await asyncio.sleep(15)
+
 
 async def take_screenshot(post_info_list):
     options = Options()
@@ -55,6 +98,18 @@ async def post_comment(comment, post_id, owner_id):
 
 async def main():
     start = time.time()
+
+    # вказуємо шлях до драйвера веб-браузера
+    driver = webdriver.Chrome('D:\VSCODE PROJECT\chromedriver\chromedriver')
+
+    # читаємо зміст файлу login.txt
+    with open('login.txt', 'r') as f:
+        login_list = f.readlines()
+
+    await login_vk(driver, login_list)
+
+    # закриваємо веб-браузер
+    driver.close()
 
     log_pass = []
     
