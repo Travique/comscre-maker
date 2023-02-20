@@ -59,7 +59,7 @@ async def open_files():
         
 async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
     options = Options()
-    #options.add_argument('--headless')
+    options.add_argument('--headless')
     options.add_argument('--disable-gpu')
     options.add_argument('--window-size=1920,1080')
 
@@ -113,7 +113,7 @@ async def post_comment(comment, post_id, owner_id):
     try:
         print(f'https://vk.com/wall-{owner_id}_{post_id} is waiting for comment.')
         vk.wall.createComment(owner_id=-owner_id, post_id=post_id, message=comment)
-        #time.sleep(TIME_SLEEP)
+        time.sleep(TIME_SLEEP)
         print(f'Comment {comment} posted successfully for https://vk.com/wall-{owner_id}_{post_id}.')
         
     except Exception as e:
