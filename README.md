@@ -24,7 +24,7 @@ Add log:pass to login.txt, add links to post_id.txt (in proccesing)
 
 # Need to DO
 
-- [ ] Login account from vk_token with selenium. | Impossible
+- [ ] Login account from vk_token with selenium. | Impossible with AUTH_TOKEN
 - [x] Write exceptions
 - [ ] Add photos and videos to comment. 
 - [x] Fix bugs (find bugs) 
