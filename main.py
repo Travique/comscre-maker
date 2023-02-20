@@ -5,6 +5,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchElementException
 import vk_api
 import time 
 import random
@@ -13,6 +14,37 @@ import os
 API_ID = "2685278"
 API_SECRET = "hHbJug59sKJie78wjrH8"
 TIME_SLEEP = 5.1
+
+async def take_screenshot(post_info_list, login_list):
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--window-size=1920,1080')
+
+    await asyncio.sleep(TIME_SLEEP)
+    
+    browser = webdriver.Chrome(options=options)
+    
+    try:
+        # Login to VK
+        await login_vk(browser, login_list)
+
+        for index, element in enumerate(post_info_list):
+            if index == len(post_info_list) + 1:
+                continue
+            
+            browser.get(post_info_list[index])
+            browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            screenshot_path = f'post_comment_{random.randrange(0,100000)}_{index}_{random.randint(0,1000000)}.png'
+            browser.save_screenshot(f'{os.getcwd()}\Screens\{screenshot_path}')
+            print(f'Screenshot saved to {screenshot_path}!')
+
+        browser.quit()
+         
+    except Exception as e:
+        print(f'Error taking screenshot: {str(e)}')
+        browser.quit()
+
 
 async def login_vk(driver, login_list):
     # використовуємо перший рядок як логін та пароль
@@ -30,58 +62,50 @@ async def login_vk(driver, login_list):
 
     await asyncio.sleep(15)
 
-    password_field = driver.find_element(By.XPATH, "//input[@name='password']")
-    password_field.send_keys(password)
-    password_field.send_keys(Keys.RETURN)
+    for i in range(10):
+        try:
+            password_field = driver.find_element(By.XPATH, "//input[@name='password']")
+            password_field.send_keys(password)
+            password_field.send_keys(Keys.RETURN)
 
-    # чекаємо 15 секунд для завантаження сторінки після входу
-    await asyncio.sleep(15)
+            # чекаємо 15 секунд для завантаження сторінки після входу
+            await asyncio.sleep(15)
 
-    # якщо вхід не вдався, використовуємо наступний рядок як логін та пароль
-    if 'id100' not in driver.current_url:
-        print('Invalid login credentials, trying next...')
-        login = login_list[1].strip().split(':')
-        username = login[0]
-        password = login[1]
-        username_field = driver.find_element(By.XPATH, "//input[@name='login']")
-        username_field.send_keys(username)
-        username_field.send_keys(Keys.RETURN)
+            # перевіряємо, чи вдалося ввійти в аккаунт VK
+            if 'feed' in driver.current_url:
+                break
 
-        await asyncio.sleep(15)
-
-        password_field = driver.find_element(By.XPATH, "//input[@name='password']")
-        password_field.send_keys(password)
-        password_field.send_keys(Keys.RETURN)
-        await asyncio.sleep(15)
-
-
-async def take_screenshot(post_info_list):
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--window-size=1920,1080')
-
-    await asyncio.sleep(TIME_SLEEP)
-    
-    browser = webdriver.Chrome(options=options)
-    
-    try:
-        for index, element in enumerate(post_info_list):
-            if index == len(post_info_list) + 1:
-                continue
-            
-            browser.get(post_info_list[index])
-            browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            screenshot_path = f'post_comment_{random.randrange(0,100000)}_{index}_{random.randint(0,1000000)}.png'
-            browser.save_screenshot(f'{os.getcwd()}\Screens\{screenshot_path}')
-            print(f'Screenshot saved to {screenshot_path}!')
-
-        browser.quit()
-         
-    except Exception as e:
-        print(f'Error taking screenshot: {str(e)}')
-        browser.quit()
-
+            # Якщо не вдалося ввійти в аккаунт VK, переходимо до наступного логіну
+            if len(login_list) > 1:
+                login_list.pop(0)
+                login = login_list[0].strip().split(':')
+                username = login[0]
+                password = login[1]
+                driver.get('https://vk.com/login')
+                username_field = driver.find_element(By.XPATH, "//input[@name='login']")
+                username_field.send_keys(username)
+                username_field.send_keys(Keys.RETURN)
+                await asyncio.sleep(15)
+            else:
+                print("No more logins to try.")
+                driver.quit()
+                return
+        except NoSuchElementException:
+            print("Password field not found. Trying next login...")
+            if len(login_list) > 1:
+                login_list.pop(0)
+                login = login_list[0].strip().split(':')
+                username = login[0]
+                password = login[1]
+                driver.get('https://vk.com/login')
+                username_field = driver.find_element(By.XPATH, "//input[@name='login']")
+                username_field.send_keys(username)
+                username_field.send_keys(Keys.RETURN)
+                await asyncio.sleep(15)
+            else:
+                print("No more logins to try.")
+                driver.quit()
+                break
 
 async def post_comment(comment, post_id, owner_id):
     
@@ -100,16 +124,13 @@ async def main():
     start = time.time()
 
     # вказуємо шлях до драйвера веб-браузера
-    driver = webdriver.Chrome('D:\VSCODE PROJECT\chromedriver\chromedriver')
+    driver = webdriver.Chrome('D:\comscre-maker\comscre-maker\chromedriver')
 
     # читаємо зміст файлу login.txt
     with open('login.txt', 'r') as f:
         login_list = f.readlines()
 
     await login_vk(driver, login_list)
-
-    # закриваємо веб-браузер
-    driver.close()
 
     log_pass = []
     
