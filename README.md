@@ -24,12 +24,12 @@ Add log:pass to login.txt, add links to post_id.txt (in proccesing)
 
 # Need to DO
 
-- [ ] Login account from vk_token with selenium. | Impossible with AUTH_TOKEN
+- [x] Login account from vk_token with selenium. | Impossible with AUTH_TOKEN
 - [x] Write exceptions
 - [ ] Add photos and videos to comment. 
 - [x] Fix bugs (find bugs) 
 - [x] Write alpha
-- [ ] Do threads for code.
+- [x] Do threads for code.
 - [x] Do Cycle for spamming
 - [x] Write deleting used accounts and write exceptions for this shit. 
 - [ ] Captcha! Warnings 
