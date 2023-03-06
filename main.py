@@ -1,6 +1,5 @@
 import asyncio
 import re
-import aiohttp
 import aiofiles
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,8 +7,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import NoSuchElementException
 import vk_api
+import requests
+import json
 import time 
 import random
 import os
@@ -27,11 +27,17 @@ async def open_file(filename):
         return [line.strip() for line in await f.readlines()]
 
 async def open_files():
-    post_info_list, log_pass, comments_list = await asyncio.gather(
+    post_info_list, log_pass = await asyncio.gather(
         open_file('post_info.txt'),
-        open_file('login.txt'),
-        open_file('comments.txt'),
+        open_file('login.txt')
     )
+
+    comment_dict = {}
+    with open('comments.txt', 'r') as f:
+        for line in f:
+            if line.strip():
+                comment, path_photo = line.strip().split(':')
+                comment_dict[comment] = path_photo.strip()
 
     match_info_list = []
     
@@ -46,13 +52,14 @@ async def open_files():
             post_id = int(match.group(2))
             match_info_list = match_info_list + [(owner_id, post_id)]
 
-    for i, lst in enumerate([post_info_list, log_pass, comments_list]):
+    for i, lst in enumerate([post_info_list, log_pass, comment_dict]):
         if not lst or '' in lst:
             print(f"{['Posts', 'Credentials', 'Comments'][i]} is empty or contains an empty string")
             input("Press Enter to exit")
             quit()
-    
-    return post_info_list, match_info_list, [tuple(line.strip().split(':')) for line in log_pass], comments_list
+            
+    return comment_dict, match_info_list, post_info_list, [tuple(line.strip().split(':')) for line in log_pass]
+
 
 
 #TAKE SCREENSHOT DEF.
@@ -106,44 +113,45 @@ async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
         print(f'Selenium Response: {str(e)}')
         browser.quit()
 
-#POST COMMENT DEF
-
-async def post_comment(comment, post_id, owner_id):
     
+#POST COMMENT&PHOTO DEF
+
+async def post_comment(comment, photo_path, post_id, owner_id):
     try:
-        print(f'https://vk.com/wall-{owner_id}_{post_id} is waiting for comment.')
-        vk.wall.createComment(owner_id=-owner_id, post_id=post_id, message=comment)
-        time.sleep(TIME_SLEEP)
-        print(f'Comment {comment} posted successfully for https://vk.com/wall-{owner_id}_{post_id}.')
-        
+        if photo_path is None:
+            vk.wall.createComment(owner_id=owner_id, post_id=post_id, message=comment)
+            print(f'Comment "{comment}" posted successfully for https://vk.com/wall-{owner_id}_{post_id}.')
+        else:
+            upload_url = vk.photos.getWallUploadServer()['upload_url']
+            with open(photo_path, 'rb') as f:
+                response = requests.post(upload_url, files={'photo': f})
+            response_json = json.loads(response.text)
+            photo = vk.photos.saveWallPhoto(photo=response_json['photo'], server=response_json['server'], hash=response_json['hash'])[0]
+
+            attachment = f"photo{photo['owner_id']}_{photo['id']}"
+            vk.wall.createComment(owner_id=owner_id, post_id=post_id, message=f"{comment}", attachment=attachment)
+            print(f'Comment "{comment} and {attachment}" posted successfully for https://vk.com/wall-{owner_id}_{post_id}.')
     except Exception as e:
-        print(f'Error posting comment "{comment}": {str(e)}')
-        return
-        
+        print(f'Error posting comment: {str(e)}')
+
+
+
+
+
 #MAIN PROGRAMM.
 
 async def main():
-    tasks = []
-    
-    post_info_list, match_info_list, log_pass, comments_list = await open_files()
-    
+    comment_dict, post_info_list, match_info_list, log_pass_list = await open_files()
+
     start = time.time()
 
-    while len(log_pass) != 0:
+    for log_pass in log_pass_list:
         try:
-            global vk_session
-            vk_session = vk_api.VkApi(log_pass[0][0], log_pass[0][1], app_id=API_ID, client_secret=API_SECRET)
+            vk_session = vk_api.VkApi(log_pass[0], log_pass[1], app_id=API_ID, client_secret=API_SECRET)
             vk_session.auth()
             global vk
             vk = vk_session.get_api()
 
-            if len(comments_list) == 0:
-                print("Add new comments!")
-                break
-            else:
-                comment = comments_list[random.randrange(0, len(comments_list))]
-                comments_list.remove(comment)
-        
         except Exception as e:
             print(f'VK Response: {str(e)}')
             continue
@@ -151,26 +159,30 @@ async def main():
         user = vk.users.get(fields='first_name, last_name')[0]
         author_id = user['first_name'] + " " + user['last_name']
         print(author_id)
-    
-        for index, element in enumerate(match_info_list):
-            if index == len(match_info_list) +1:
+
+        tasks = []
+        keys = list(comment_dict.keys())
+        values = list(comment_dict.values())
+        comment, photo_path = keys[0], values[0]
+        for index, element in enumerate(post_info_list):
+            if index == len(match_info_list):
                 continue
-            tasks.append(asyncio.create_task(post_comment(comment, match_info_list[index][1], match_info_list[index][0])))
-                
-        #if error in tasks we have check this shit
-        tasks.append(asyncio.create_task(take_screenshot(log_pass, post_info_list, match_info_list, author_id)))    
+            owner_id, post_id = element
+            if photo_path:
+                tasks.append(asyncio.create_task(post_comment(comment, photo_path, post_id, -owner_id)))
+            else:
+                tasks.append(asyncio.create_task(post_comment(comment, None, post_id, -owner_id)))
+
+        tasks.append(asyncio.create_task(take_screenshot(log_pass, post_info_list, match_info_list, author_id)))
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        log_pass.pop(0)
-            
         for result in results:
             if isinstance(result, Exception):
                 for task in tasks:
                     task.cancel()
 
-    end = time.time() - start 
+    end = time.time() - start
     print(f'Time of working: {end}')
-
 
 if __name__ == '__main__':
     asyncio.run(main())
