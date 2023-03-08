@@ -19,12 +19,12 @@ import os
 API_ID = "2685278"
 API_SECRET = "hHbJug59sKJie78wjrH8"
 TIME_SLEEP = 5.1
-
 #OPENING ALL FILES.
 
 async def open_file(filename):
     async with aiofiles.open(filename, mode='r') as f:
         return [line.strip() for line in await f.readlines()]
+
 
 async def open_files():
     post_info_list, log_pass = await asyncio.gather(
@@ -61,12 +61,11 @@ async def open_files():
     return comment_dict, match_info_list, post_info_list, [tuple(line.strip().split(':')) for line in log_pass]
 
 
-
-#TAKE SCREENSHOT DEF.
-        
+'''This def create a scrinshots of comments which
+attempd by function create_comment'''        
 async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
     options = Options()
-    options.add_argument('--headless')
+    #options.add_argument('--headless')
     options.add_argument('--disable-gpu')
     options.add_argument('--window-size=1920,1080')
 
@@ -75,8 +74,8 @@ async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
     browser = webdriver.Chrome(options=options)
     
     try:
-        username = log_pass[0][0]
-        password = log_pass[0][1]
+        username = log_pass[0]
+        password = log_pass[1]
         
         browser.get('https://vk.com/login')
 
@@ -90,22 +89,25 @@ async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
 
         time.sleep(TIME_SLEEP)
         
-        for index, element in enumerate(post_info_list):
-            if index == len(post_info_list) + 1:
+        for index, element in enumerate(match_info_list):
+            if index == len(match_info_list) + 1:
                 continue
 
-            browser.get(post_info_list[index])
+            try: 
+                browser.get(match_info_list[index])
 
-            button = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "div.post_replies_reorder_wrap")))
-            button.click()
+                button = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "div.post_replies_reorder_wrap")))
+                button.click()
 
-            button = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-order="desc"]')))
-            button.click()
-            time.sleep(5)
-            
-            screenshot_path = f'post_comment_{random.randrange(0,100000)}_{index}_{random.randint(0,1000000)}.png'
-            browser.save_screenshot(f'{os.getcwd()}\Screens\{screenshot_path}')
-            print(f'Screenshot saved to {screenshot_path}!')
+                button = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-order="desc"]')))
+                button.click()
+                time.sleep(5)
+                
+                screenshot_path = f'post_comment_{random.randrange(0,100000)}_{index}_{random.randint(0,1000000)}.png'
+                browser.save_screenshot(f'{os.getcwd()}\Screens\{screenshot_path}')
+                print(f'Screenshot saved to {screenshot_path}!')
+            except:
+                continue
 
         browser.quit()
         
@@ -144,7 +146,6 @@ async def main():
     comment_dict, post_info_list, match_info_list, log_pass_list = await open_files()
 
     start = time.time()
-
     for log_pass in log_pass_list:
         try:
             vk_session = vk_api.VkApi(log_pass[0], log_pass[1], app_id=API_ID, client_secret=API_SECRET)
