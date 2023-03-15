@@ -8,11 +8,13 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import vk_api
+from vk_api.exceptions import ApiError
 import requests
 import json
 import time 
 import random
 import os
+import sys
 
 #SETTINGS.
 
@@ -115,10 +117,10 @@ async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
         print(f'Selenium Response: {str(e)}')
         browser.quit()
 
-    
-#POST COMMENT&PHOTO DEF
 
-async def post_comment(comment, photo_path, post_id, owner_id):
+
+#POST COMMENT&PHOTO DEF
+async def post_comment(comment, photo_path, post_id, owner_id, log_pass):     
     try:
         if photo_path is None:
             vk.wall.createComment(owner_id=owner_id, post_id=post_id, message=comment)
@@ -135,10 +137,9 @@ async def post_comment(comment, photo_path, post_id, owner_id):
             print(f'Comment "{comment} and {attachment}" posted successfully for https://vk.com/wall-{owner_id}_{post_id}.')
     except Exception as e:
         print(f'Error posting comment: {str(e)}')
-
-
-
-
+        if isinstance(e, ApiError) and e.code == 17:
+            with open('invalid_acc.txt', 'a') as f:
+                f.write(f'{log_pass[0]}:{log_pass[1]} - Phone required\n')
 
 #MAIN PROGRAMM.
 
@@ -152,12 +153,21 @@ async def main():
             vk_session.auth()
             global vk
             vk = vk_session.get_api()
-
         except Exception as e:
             print(f'VK Response: {str(e)}')
+            if str(e) == 'Bad password':
+                with open('invalid_acc.txt', 'a') as f:
+                    f.write(f'{log_pass[0]}:{log_pass[1]} - Invalid password or login\n')
             continue
-
-        user = vk.users.get(fields='first_name, last_name')[0]
+        try:
+            user = vk.users.get(fields='first_name, last_name')[0]
+        except vk_api.exceptions.ApiError as e:
+            print(f'VK Response: {str(e)}')
+            if isinstance(e, ApiError) and e.code == 5:
+                with open('invalid_acc.txt', 'a') as f:
+                    f.write(f'{log_pass[0]}:{log_pass[1]} - Need mobile authentication or account is blocked.\n')
+                sys.exit()
+        
         author_id = user['first_name'] + " " + user['last_name']
         print(author_id)
 
@@ -170,9 +180,9 @@ async def main():
                 continue
             owner_id, post_id = element
             if photo_path:
-                tasks.append(asyncio.create_task(post_comment(comment, photo_path, post_id, -owner_id)))
+                tasks.append(asyncio.create_task(post_comment(comment, photo_path, post_id, -owner_id, log_pass)))
             else:
-                tasks.append(asyncio.create_task(post_comment(comment, None, post_id, -owner_id)))
+                tasks.append(asyncio.create_task(post_comment(comment, None, post_id, -owner_id, log_pass)))
 
         tasks.append(asyncio.create_task(take_screenshot(log_pass, post_info_list, match_info_list, author_id)))
         results = await asyncio.gather(*tasks, return_exceptions=True)
