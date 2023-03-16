@@ -65,9 +65,21 @@ async def open_files():
 
 '''This def create a scrinshots of comments which
 attempd by function create_comment'''        
+import os
+import random
+import time
+import asyncio
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
 async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
     options = Options()
-    #options.add_argument('--headless')
+    options.add_argument('--headless')
     options.add_argument('--disable-gpu')
     options.add_argument('--window-size=1920,1080')
 
@@ -91,31 +103,31 @@ async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
 
         time.sleep(TIME_SLEEP)
         
-        for index, element in enumerate(match_info_list):
-            if index == len(match_info_list) + 1:
-                continue
-
-            try: 
-                browser.get(match_info_list[index])
-
+        for index, post_url in enumerate(match_info_list):
+            try:
+                browser.get(post_url)
+                
                 button = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "div.post_replies_reorder_wrap")))
                 button.click()
 
                 button = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-order="desc"]')))
                 button.click()
+
                 time.sleep(5)
                 
                 screenshot_path = f'post_comment_{random.randrange(0,100000)}_{index}_{random.randint(0,1000000)}.png'
-                browser.save_screenshot(f'{os.getcwd()}\Screens\{screenshot_path}')
+                
+                browser.save_screenshot(os.path.join(os.getcwd(), 'Screens', screenshot_path))
+                
                 print(f'Screenshot saved to {screenshot_path}!')
             except:
                 continue
 
         browser.quit()
-        
     except Exception as e:
-        print(f'Selenium Response: {str(e)}')
+        print(f'Error occurred: {e}')
         browser.quit()
+
 
 
 
