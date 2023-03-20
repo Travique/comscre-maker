@@ -26,7 +26,7 @@ Add log:pass to login.txt, add links to post_id.txt (in proccesing)
 
 - [x] Login account from vk_token with selenium. | Impossible with AUTH_TOKEN
 - [x] Write exceptions
-- [ ] Add photos and videos to comment. 
+- [x] Add photos and videos to comment. 
 - [x] Fix bugs (find bugs) 
 - [x] Write alpha
 - [x] Do threads for code.
