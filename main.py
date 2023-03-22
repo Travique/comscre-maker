@@ -65,17 +65,6 @@ async def open_files():
 
 '''This def create a scrinshots of comments which
 attempd by function create_comment'''        
-import os
-import random
-import time
-import asyncio
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
 
 async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
     options = Options()
