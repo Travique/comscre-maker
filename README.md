@@ -22,11 +22,9 @@ Be sure, that u r using VPN.
 
 Add log:pass to login.txt, add links to post_id.txt (in proccesing)
 
-![This is an image](https://arthive.net/res/media/img/orig/work/6e8/339768.png)
-
 # Need to DO
 
-- [x] Login account from vk_token with selenium. | Impossible with AUTH_TOKEN
+- [x] Login account from vk_token with selenium. 
 - [x] Write exceptions
 - [x] Add photos and videos to comment. 
 - [x] Fix bugs (find bugs) 
