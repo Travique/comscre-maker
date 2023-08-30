@@ -1,4 +1,0 @@
-vk_api
-asyncio
-aiofiles
-selenium
