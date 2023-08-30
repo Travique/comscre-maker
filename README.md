@@ -1,5 +1,7 @@
 # Comments-ScreeenMaker-Python
-This is alpha test of program which help people to spam into the comments and do screenshots.
+The product was created to facilitate one of the areas of work of volunteers who cooperate with the cyber police department of Ukraine. It allows you to systematize a separate, narrow area of   work, and speed up its execution. There is a war in our country now, and everyone must work in the direction they understand best, to speed up our victory with you.
+
+This is stable alpha version of product, w8 for new updates. 
 
 # ReadMe!
 ## First Moment!
