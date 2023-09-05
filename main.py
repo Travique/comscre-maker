@@ -68,7 +68,7 @@ attempd by function create_comment'''
 
 async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
     options = Options()
-    options.add_argument('--headless')
+    options.add_argument('--headless') # Turn off for debugging | 
     options.add_argument('--disable-gpu')
     options.add_argument('--window-size=1920,1080')
 
