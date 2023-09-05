@@ -75,7 +75,7 @@ async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
     await asyncio.sleep(TIME_SLEEP)
     
     browser = webdriver.Chrome(options=options)
-    
+    print('1. Success of webdriver initialization')
     try:
         username = log_pass[0]
         password = log_pass[1]
@@ -90,8 +90,8 @@ async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
         password_field.send_keys(password)
         password_field.send_keys(Keys.RETURN)
 
-        time.sleep(TIME_SLEEP)
-        
+        time.sleep(TIME_SLEEP * 3)
+        print('2. Success of loginization')
         for index, post_url in enumerate(match_info_list):
             try:
                 browser.get(post_url)
@@ -103,7 +103,7 @@ async def take_screenshot(log_pass, post_info_list, match_info_list, author_id):
                 button.click()
 
                 time.sleep(5)
-                
+                print('3. Success of comment management')
                 screenshot_path = f'post_comment_{random.randrange(0,100000)}_{index}_{random.randint(0,1000000)}.png'
                 
                 browser.save_screenshot(os.path.join(os.getcwd(), 'Screens', screenshot_path))
